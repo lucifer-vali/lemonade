@@ -1590,6 +1590,14 @@ void ModelManager::update_model_in_cache(const std::string& model_name, bool dow
                           << model_name << "'" << std::endl;
                 return;
             }
+
+            // Calculate size in GB
+            try {
+                uintmax_t file_size = fs::file_size(it->second.resolved_path());
+                it->second.size = static_cast<double>(file_size) / (1024.0 * 1024.0 * 1024.0);
+            } catch (...) {
+                it->second.size = 0.0;
+            }
             populate_static_max_context_window(it->second);
             LOG(INFO, "ModelManager") << "Updated '" << model_name
                       << "' downloaded=" << downloaded
