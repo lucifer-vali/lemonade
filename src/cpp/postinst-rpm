@@ -21,6 +21,11 @@ fi
 if command -v systemctl > /dev/null 2>&1 && [ -d /run/systemd/system ]; then
     systemctl daemon-reload > /dev/null 2>&1 || true
 
+    # Fresh install — use preset to follow Fedora's central policy
+    if [ "${1:-0}" -eq 1 ]; then
+        systemctl preset lemond.service > /dev/null 2>&1 || true
+    fi
+
     # Handle migration from lemonade-server.service to lemond.service during upgrade
     # In RPM, $1=2 means upgrade (new package count after transaction)
     if [ "${1:-0}" -eq 2 ]; then

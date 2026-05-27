@@ -1356,22 +1356,10 @@ if(UNIX AND NOT APPLE)
         @ONLY
     )
 
-    # Install systemd service file
+    # Install systemd service file to the standard systemd search path
     install(FILES ${CMAKE_BINARY_DIR}/lemond.service
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/system
+        DESTINATION /usr/lib/systemd/system
     )
-    # Create symlink in standard systemd search path only if not installing to /usr
-    # (if prefix is /usr, the service is already in the standard location)
-    if(NOT CMAKE_INSTALL_PREFIX STREQUAL "/usr")
-        install(CODE "
-            file(MAKE_DIRECTORY \"\$ENV{DESTDIR}/usr/lib/systemd/system\")
-            execute_process(
-                COMMAND ${CMAKE_COMMAND} -E create_symlink
-                    ${CMAKE_INSTALL_PREFIX}/lib/systemd/system/lemond.service
-                    \"\$ENV{DESTDIR}/usr/lib/systemd/system/lemond.service\"
-            )
-        ")
-    endif()
 
     # Install sysusers.d snippet so the 'lemonade' system user is created
     install(FILES ${CMAKE_SOURCE_DIR}/data/lemonade.sysusers
@@ -1386,7 +1374,7 @@ if(UNIX AND NOT APPLE)
         @ONLY
     )
     install(FILES ${CMAKE_BINARY_DIR}/lemond-user.service
-        DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/systemd/user
+        DESTINATION /usr/lib/systemd/user
         RENAME lemond.service
     )
 
