@@ -14,7 +14,7 @@ This guide covers everything you need to build, test, and contribute to Lemonade
 - [Building Installers](#building-installers)
   - [Windows Installer (WiX/MSI)](#windows-installer-wixmsi)
   - [Linux .deb Package (Debian/Ubuntu)](#linux-deb-package-debianubuntu)
-  - [Linux .rpm Package (Fedora, RHEL etc)](#linux-rpm-package-fedora-rhel-etc)
+  - [Linux .rpm Package (Fedora 43 & 44)](#linux-rpm-package-fedora-43-44)
 - [Developer IDE and Build Steps](#developer-ide-and-build-steps)
 - [Code Structure](#code-structure)
 - [Architecture Overview](#architecture-overview)
@@ -276,24 +276,26 @@ cpack -G RPM
 
 **Package Output:**
 
-Creates `lemonade-server-<VERSION>.x86_64.rpm` (e.g., `lemonade-server-9.1.2.x86_64.rpm`).
-The CI release pipeline builds two variants — `-fc43` and `-fc44` — and renames them
-accordingly. Resources are installed the same as the .deb package above.
+Creates two RPMs:
+- `lemonade-server-<VERSION>.x86_64.rpm` — headless server, CLI, systemd units
+- `lemonade-tray-<VERSION>.x86_64.rpm` — optional system tray (GTK3 + AppIndicator3)
+
+The CI release pipeline builds both variants for fc43 and fc44.
 
 **Installation:**
 
 ```bash
-# Fedora 43
+# Server (required)
 sudo dnf install ./lemonade-server-<VERSION>-fc43.x86_64.rpm
 
-# Fedora 44
-sudo dnf install ./lemonade-server-<VERSION>-fc44.x86_64.rpm
+# Tray (optional)
+sudo dnf install ./lemonade-tray-<VERSION>-fc43.x86_64.rpm
 ```
 
 **Uninstallation:**
 
 ```bash
-sudo dnf remove lemonade-server
+sudo dnf remove lemonade-server lemonade-tray
 ```
 
 **Post-Installation:**

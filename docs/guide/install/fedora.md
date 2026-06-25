@@ -1,6 +1,8 @@
-## Fedora Installation
+# Fedora Installation
 
 Lemonade is built for Fedora 43 and 44.
+
+## Step 1: Install lemonade-server
 
 === "Fedora 43"
 
@@ -29,7 +31,22 @@ sudo systemctl enable --now lemond
 Check that it's running:
 
 ```bash
-sudo systemctl --no-pager status lemond
+sudo systemctl status lemond
 ```
 
 Once the service is running, open [http://localhost:13305](http://localhost:13305) in your browser.
+
+## System tray app
+
+A system tray application for quick access to model management, logs, and the web app.
+Requires GTK3 and AppIndicator3.
+
+```bash
+sudo dnf install ./lemonade-tray-*-fc43.x86_64.rpm
+```
+
+Then start it:
+
+```bash
+lemonade-tray
+```
