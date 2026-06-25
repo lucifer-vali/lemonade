@@ -248,7 +248,7 @@ if(UNIX AND NOT APPLE AND _LINUX_TRAY_BUILD)
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
     )
 
-    install(TARGETS lemonade-tray RUNTIME DESTINATION bin)
+    install(TARGETS lemonade-tray RUNTIME DESTINATION bin COMPONENT Tray)
 
     # No autostart desktop entry — Linux users start lemonade-tray manually
 
@@ -262,7 +262,7 @@ if(UNIX AND NOT APPLE AND _LINUX_TRAY_BUILD)
                     \"\${_symlink_target}\"
                     \"\$ENV{DESTDIR}/usr/bin/lemonade-tray\"
             )
-        ")
+        " COMPONENT Tray)
     endif()
 endif()
 

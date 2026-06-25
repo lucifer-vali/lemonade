@@ -302,7 +302,7 @@ jobs:
         id: get_version
         uses: ./.github/actions/get-version
 
-      - name: Build Linux .rpm package
+      - name: Build Linux .rpm packages
         shell: bash
         run: |
           set -e
@@ -315,29 +315,40 @@ jobs:
 
           cd build
 
-          echo "Creating .rpm package with CPack..."
+          echo "Creating .rpm packages with CPack..."
           cpack -G RPM -V
 
-          CPACK_RPM="lemonade-server-${LEMONADE_VERSION}.x86_64.rpm"
-          RPM_FILE="lemonade-server-${LEMONADE_VERSION}-fc${{ matrix.fedora-version }}.x86_64.rpm"
-
-          if [ ! -f "$CPACK_RPM" ]; then
-              echo "ERROR: .rpm package not created!"
+          # Find and rename the server RPM (<name>-<ver>.<arch>.rpm)
+          SERVER_RPM=$(ls lemonade-server-*.x86_64.rpm 2>/dev/null | head -1)
+          if [ -z "$SERVER_RPM" ]; then
+              echo "ERROR: lemonade-server .rpm package not created!"
               echo "Contents of build directory:"
               ls -lR .
               exit 1
           fi
-
-          mv "$CPACK_RPM" "$RPM_FILE"
-
+          SERVER_RPM_FILE="lemonade-server-${LEMONADE_VERSION}-fc${{ matrix.fedora-version }}.x86_64.rpm"
+          mv "$SERVER_RPM" "$SERVER_RPM_FILE"
           echo "Package information:"
-          rpm -qip "$RPM_FILE"
+          rpm -qip "$SERVER_RPM_FILE"
 
-      - name: Upload .rpm package
+          # Find and rename the tray RPM (if created — tray deps may not be available)
+          TRAY_RPM=$(ls lemonade-tray-*.x86_64.rpm 2>/dev/null | head -1)
+          if [ -n "$TRAY_RPM" ]; then
+              TRAY_RPM_FILE="lemonade-tray-${LEMONADE_VERSION}-fc${{ matrix.fedora-version }}.x86_64.rpm"
+              mv "$TRAY_RPM" "$TRAY_RPM_FILE"
+              echo "Tray package information:"
+              rpm -qip "$TRAY_RPM_FILE"
+          else
+              echo "lemonade-tray .rpm not found (AppIndicator3 likely missing) — skipping"
+          fi
+
+      - name: Upload .rpm packages
         uses: actions/upload-artifact@v7
         with:
           name: lemonade-rpm-fedora-${{ matrix.fedora-version }}
-          path: build/lemonade-server-${{ env.LEMONADE_VERSION }}-fc${{ matrix.fedora-version }}.x86_64.rpm
+          path: |
+            build/lemonade-server-${{ env.LEMONADE_VERSION }}-fc${{ matrix.fedora-version }}.x86_64.rpm
+            build/lemonade-tray-${{ env.LEMONADE_VERSION }}-fc${{ matrix.fedora-version }}.x86_64.rpm
           retention-days: 7
 
   build-lemonade-macos-dmg:
@@ -1096,13 +1107,13 @@ jobs:
     env:
       LEMONADE_VERSION: ${{ needs.build-lemonade-rpm.outputs.version }}
     steps:
-      - name: Download Lemonade .rpm Package
+      - name: Download Lemonade .rpm Packages
         uses: actions/download-artifact@v7
         with:
           name: lemonade-rpm-fedora-${{ matrix.fedora-version }}
           path: .
 
-      - name: Install and verify Lemonade (.rpm)
+      - name: Install and verify lemonade-server (.rpm)
         shell: bash
         run: |
           set -e
@@ -1128,6 +1139,28 @@ jobs:
 
           /opt/bin/lemonade --version
           /opt/bin/lemond --version
+
+      - name: Install and verify lemonade-tray (.rpm) if present
+        shell: bash
+        run: |
+          set -e
+
+          TRAY_RPM="lemonade-tray-${LEMONADE_VERSION}-fc${{ matrix.fedora-version }}.x86_64.rpm"
+          if [ ! -f "$TRAY_RPM" ]; then
+              echo "lemonade-tray .rpm not found — skipping"
+              exit 0
+          fi
+
+          dnf install -y "$TRAY_RPM"
+
+          echo "Installed package information:"
+          rpm -qi lemonade-tray
+
+          echo "Installed file list:"
+          rpm -ql lemonade-tray | sort
+
+          test -f /opt/bin/lemonade-tray
+          /opt/bin/lemonade-tray --help
 
   test-embeddable-posix:
     name: Test Embeddable (${{ matrix.label }})
@@ -2049,6 +2082,7 @@ jobs:
           ls -lh lemonade-server-minimal.msi
           ls -lh lemonade.msi
           ls -lh lemonade-server-*.x86_64.rpm
+          ls -lh lemonade-tray-*.x86_64.rpm
           ls -lh *.pkg
           ls -lh lemonade-embeddable-${LEMONADE_VERSION}-ubuntu-x64.tar.gz
           ls -lh lemonade-embeddable-${LEMONADE_VERSION}-windows-x64.zip
@@ -2071,6 +2105,7 @@ jobs:
             lemonade-server-minimal.msi
             lemonade.msi
             lemonade-server-*.x86_64.rpm
+            lemonade-tray-*.x86_64.rpm
             *.pkg
             lemonade-embeddable-${{ env.LEMONADE_VERSION }}-ubuntu-x64.tar.gz
             lemonade-embeddable-${{ env.LEMONADE_VERSION }}-windows-x64.zip

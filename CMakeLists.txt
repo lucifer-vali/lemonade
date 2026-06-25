@@ -24,6 +24,9 @@ if(UNIX AND NOT APPLE AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX "/opt" CACHE PATH "Install prefix" FORCE)
 endif()
 
+# Default component for install() commands without explicit COMPONENT
+set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "Runtime")
+
 # Include GNUInstallDirs for standard installation directories
 include(GNUInstallDirs)
      # Install man pages
