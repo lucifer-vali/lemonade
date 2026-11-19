@@ -5242,36 +5242,11 @@ body.install-options {
   display: block;
 }
 
-.gs-fedora-label {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  text-align: center;
-  margin: 0.75rem 0 0.35rem;
-}
-
-/* Fedora ships two side-by-side editions (43 / 44). `min-width: 0` lets each
-   column shrink so the pair fits the card instead of overrunning it, and the long
-   `wget` URL scrolls/wraps within its own console rather than forcing the row wide. */
-.gs-fedora-cols {
-  display: flex;
-  gap: 12px;
-}
-.gs-fedora-col {
-  flex: 1 1 0;
-  min-width: 0;
-}
 .gs-install-block {
   margin-top: 16px;
 }
 
-/* Below the card width the two editions stack so neither is clipped. */
 @media (max-width: 720px) {
-  .gs-fedora-cols {
-    flex-direction: column;
-    gap: 0;
-  }
   /* On phones a horizontally-scrolling command hides most of a long `wget` URL.
      Wrap install commands instead so the whole command is visible (the copy
      button still grabs the full text). Desktop keeps single-line `pre`. */

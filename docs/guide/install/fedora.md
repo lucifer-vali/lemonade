@@ -1,24 +1,24 @@
 ## Fedora Installation
 
-Lemonade is built for Fedora 43 and 44.
+Lemonade is packaged for Fedora 43 and newer.
 
-=== "Fedora 43"
+Install from [Copr](https://copr.fedorainfracloud.org/coprs/g/lemonade-server/lemonade):
 
-    Get the RPM from the [latest release](https://github.com/lemonade-sdk/lemonade/releases):
-    `lemonade-server-<version>-fc43.x86_64.rpm`
+```bash
+sudo dnf copr enable @lemonade-server/lemonade
+sudo dnf install lemonade
+```
 
-    ```bash
-    sudo dnf install ./lemonade-server-*-fc43.x86_64.rpm
-    ```
+Install individual packages instead:
 
-=== "Fedora 44"
-
-    Get the RPM from the [latest release](https://github.com/lemonade-sdk/lemonade/releases):
-    `lemonade-server-<version>-fc44.x86_64.rpm`
-
-    ```bash
-    sudo dnf install ./lemonade-server-*-fc44.x86_64.rpm
-    ```
+```bash
+sudo dnf install lemonade-cli              # Command-line client
+sudo dnf install lemonade-web              # Browser launcher
+sudo dnf install lemonade-tray             # Tray application
+sudo dnf install lemonade-server           # Lemonade server
+sudo dnf install lemonade-desktop          # Desktop application
+sudo dnf install lemonade-server-embedded  # Standalone server
+```
 
 Enable and start the service:
 
