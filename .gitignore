@@ -38,6 +38,8 @@ MANIFEST
 build/*.manifest
 dist/*.manifest
 *.spec
+# PyInstaller's *.spec pattern above must not hide the RPM packaging spec
+!contrib/rpm/*.spec
 
 # Installer logs
 pip-log.txt

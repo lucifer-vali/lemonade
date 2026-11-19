@@ -1,0 +1,107 @@
+name: Copr RPM
+
+permissions:
+  contents: read
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  copr:
+    name: Build ${{ matrix.chroots }} SRPM and upload
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: ${{ matrix.container }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - container: fedora:43
+            chroots: fedora-43
+          - container: fedora:44
+            chroots: fedora-44
+          - container: fedora:45
+            chroots: fedora-45
+          - container: quay.io/fedora/fedora:rawhide
+            chroots: fedora-rawhide
+          - container: almalinux:10
+            chroots: epel-10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Configure git safe directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Install packaging tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ matrix.chroots }}" in
+            epel-*) dnf install -y epel-release ;;
+          esac
+          dnf install -y copr-cli git python3 rpm-build
+
+      - name: Get Lemonade version
+        id: get_version
+        uses: ./.github/actions/get-version
+
+      - name: Check release tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="v${{ steps.get_version.outputs.version }}"
+          if [[ "$GITHUB_REF_NAME" != "$expected" ]]; then
+            echo "::error::ref $GITHUB_REF_NAME does not match release tag $expected"
+            exit 1
+          fi
+
+      - name: Build source RPM
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ steps.get_version.outputs.version }}"
+          mkdir -p dist
+          python3 tools/source_archive.py --output-dir dist --version "$version"
+          cp contrib/rpm/lemonade.spec dist/lemonade.spec
+          sed -i "s|^Version:.*|Version:        ${version}|" dist/lemonade.spec
+          rpmbuild -bs dist/lemonade.spec \
+            --define "_sourcedir $PWD/dist" \
+            --define "_srcrpmdir $PWD/dist"
+
+      - name: Configure copr-cli
+        shell: bash
+        env:
+          COPR_CONFIG: ${{ secrets.COPR_CONFIG }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$COPR_CONFIG" ]]; then
+            echo "::error::COPR_CONFIG secret is not set"
+            exit 1
+          fi
+          mkdir -p "$HOME/.config"
+          printf '%s\n' "$COPR_CONFIG" > "$HOME/.config/copr"
+          chmod 600 "$HOME/.config/copr"
+          copr-cli whoami
+
+      - name: Upload to Copr
+        shell: bash
+        run: |
+          set -euo pipefail
+          copr-cli build @lemonade-server/lemonade dist/lemonade-*.src.rpm \
+            --chroot ${{ matrix.chroots }}-x86_64 \
+            --chroot ${{ matrix.chroots }}-aarch64 \
+            --timeout 43200 \
+            --nowait
